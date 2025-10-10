@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: user_crud_postgres
+    environment:
+      POSTGRES_DB: user_crud_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - user_crud_network
+
+  api:
+    build: .
+    container_name: user_crud_api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      DB_NAME: user_crud_db
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - ./static:/app/static
+    networks:
+      - user_crud_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  user_crud_network:
+    driver: bridge
